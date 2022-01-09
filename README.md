@@ -2,10 +2,12 @@
 make your ubuntu is great
 
 ## Git proxy
+
 ```bash
 git config --global http.proxy http://127.0.0.1:8889
 ```
-## Ubuntu vsocde color
+
+## Ubuntu Vscode color
 `/usr/share/applications/code.desktop`
 ```bash
 Exec=/usr/share/code/code --force-color-profile=srgb --unity-launch %F
@@ -53,4 +55,120 @@ sudo kubeadm init
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+## V2ray In Server
+### nginx
+```nginx
+server {
+  listen       80;
+  listen       [::]:80;
+  index index.html index.htm index.nginx-debian.html;
+  server_name  your_domain_name;
+  root /var/www/html;
+
+  location / {
+    try_files $uri $uri/ =404;
+  }
+
+  location /v2 {
+    proxy_redirect off;
+    proxy_pass http://127.0.0.1:31291;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    # proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+```
+Now,setup HTTPS certificates with [certbot](https://certbot.eff.org/)
+
+### v2ray config.json
+```json
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "stats": {},
+  "api": {
+    "services": [
+      "StatsService"
+    ],
+    "tag": "api"
+  },
+  "policy": {
+    "levels": {
+      "1": {
+        "handshake": 4,
+        "connIdle": 300,
+        "uplinkOnly": 2,
+        "downlinkOnly": 5,
+        "statsUserUplink": false,
+        "statsUserDownlink": false
+      }
+    },
+    "system": {
+      "statsInboundUplink": true,
+      "statsInboundDownlink": true
+    }
+  },
+  "allocate": {
+    "strategy": "always",
+    "refresh": 5,
+    "concurrency": 3
+  },
+  "inbounds": [
+    {
+      "port": 31291,
+      "listen": "127.0.0.1",
+      "protocol": "vmess",
+      "settings": {
+        "clients": [
+          {
+            "id": "a4f7ef9b-6951-2397-098d-bb1e660b3805",
+            "alterId": 0,
+            "email": "your_name@gmail.com"
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/v2"
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "settings": {
+      }
+    }
+  ],
+  "routing": {
+    "settings": {
+      "rules": [
+        {
+          "inboundTag": [
+            "api"
+          ],
+          "outboundTag": "api",
+          "type": "field"
+        }
+      ]
+    },
+    "strategy": "rules"
+  }
+}
+```
+Now, install v2ray
+```bash
+bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
+```
+## V2ray In Client
+```
+vmess://ws+tls:a4f7ef9b-6951-2397-098d-bb1e660b3805-0@your_domain_name:443/?path=/v2&tlsServerName=your_domain_name#your_domain_name
 ```
