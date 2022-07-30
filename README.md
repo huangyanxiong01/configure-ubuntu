@@ -172,3 +172,11 @@ bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/
 ```
 vmess://ws+tls:a4f7ef9b-6951-2397-098d-bb1e660b3805-0@your_domain_name:443/?path=/v2&tlsServerName=your_domain_name#your_domain_name
 ```
+
+youtube-dl config
+```
+-f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best
+--proxy http://127.0.0.1:8889
+--merge-output-format mp4
+-o /media/common/myfreax/youtube/%(title)s/%(title)s.%(ext)s
+```
